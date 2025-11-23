@@ -83,6 +83,7 @@ export const useApiStore = create<ApiStore>()(
                         queryParams: [{ key: '', value: '', enabled: true }],
                         body: '',
                         bodyType: 'json',
+                        auth: { type: 'none' }, // Add this
                     };
 
                     return {

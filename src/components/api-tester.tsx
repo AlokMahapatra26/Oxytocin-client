@@ -16,8 +16,9 @@ import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/app-sidebar';
 import { useApiStore } from '@/store/api-store';
 import { useStore } from '@/hooks/use-store';
-import { ApiRequest, KeyValue } from '@/types';
+import { ApiRequest, KeyValue, AuthConfig } from '@/types';
 import { ResponseViewer } from '@/components/response/response-viewer';
+import { AuthPanel } from '@/components/auth/auth-panel';
 
 interface ApiResponse {
     status: number;
@@ -25,6 +26,7 @@ interface ApiResponse {
     headers: Record<string, string>;
     data: any;
     duration: number;
+    cookies?: string[];
 }
 
 export default function ApiTester() {
@@ -34,6 +36,8 @@ export default function ApiTester() {
     const addFolder = useApiStore((state) => state.addFolder);
     const addRequest = useApiStore((state) => state.addRequest);
     const deleteRequest = useApiStore((state) => state.deleteRequest);
+    const deleteCollection = useApiStore((state) => state.deleteCollection);
+    const deleteFolder = useApiStore((state) => state.deleteFolder);
     const renameCollection = useApiStore((state) => state.renameCollection);
     const renameFolder = useApiStore((state) => state.renameFolder);
     const renameRequest = useApiStore((state) => state.renameRequest);
@@ -46,9 +50,6 @@ export default function ApiTester() {
     const [response, setResponse] = useState<ApiResponse | null>(null);
     const [error, setError] = useState<string | null>(null);
 
-    const deleteCollection = useApiStore((state) => state.deleteCollection);
-    const deleteFolder = useApiStore((state) => state.deleteFolder);
-
     const [queryParams, setQueryParams] = useState<KeyValue[]>([
         { key: '', value: '', enabled: true },
     ]);
@@ -57,8 +58,9 @@ export default function ApiTester() {
     ]);
     const [body, setBody] = useState('');
     const [bodyType, setBodyType] = useState<'json' | 'raw'>('json');
+    const [auth, setAuth] = useState<AuthConfig>({ type: 'none' });
 
-    const selectRequest = (request: any) => {
+    const selectRequest = (request: ApiRequest) => {
         setSelectedRequestId(request.id);
         setUrl(request.url);
         setMethod(request.method);
@@ -66,11 +68,11 @@ export default function ApiTester() {
         setHeaders(request.headers);
         setBody(request.body);
         setBodyType(request.bodyType);
+        setAuth(request.auth || { type: 'none' });
     };
 
     const saveCurrentRequest = () => {
         if (!selectedRequestId) return;
-
 
         let targetCollectionId = '';
         let targetFolderId: string | undefined;
@@ -95,7 +97,6 @@ export default function ApiTester() {
         });
 
         if (targetCollectionId && currentRequest) {
-            // Only update name if it's still default or empty
             const shouldUpdateName =
                 !currentRequest.name ||
                 currentRequest.name === 'New Request' ||
@@ -111,14 +112,13 @@ export default function ApiTester() {
                     headers,
                     body,
                     bodyType,
-                    // Only update name to URL if it's still the default name
+                    auth,
                     ...(shouldUpdateName && url && { name: url.split('?')[0].split('/').pop() || url }),
                 },
                 targetFolderId
             );
         }
     };
-
 
     const addRow = (
         type: 'params' | 'headers',
@@ -193,6 +193,7 @@ export default function ApiTester() {
                     headers: requestHeaders,
                     params,
                     body: requestBody,
+                    auth,
                 }),
             });
 
@@ -278,6 +279,7 @@ export default function ApiTester() {
                                         <TabsList className="bg-muted">
                                             <TabsTrigger value="params">Query Params</TabsTrigger>
                                             <TabsTrigger value="headers">Headers</TabsTrigger>
+                                            <TabsTrigger value="auth">Authorization</TabsTrigger>
                                             {['POST', 'PUT', 'PATCH'].includes(method) && (
                                                 <TabsTrigger value="body">Body</TabsTrigger>
                                             )}
@@ -379,6 +381,10 @@ export default function ApiTester() {
                                             </div>
                                         </TabsContent>
 
+                                        <TabsContent value="auth" className="mt-4">
+                                            <AuthPanel auth={auth} onChange={setAuth} />
+                                        </TabsContent>
+
                                         {['POST', 'PUT', 'PATCH'].includes(method) && (
                                             <TabsContent value="body" className="mt-4">
                                                 <div className="space-y-4">
@@ -432,5 +438,4 @@ export default function ApiTester() {
             </div>
         </SidebarProvider>
     );
-
 }

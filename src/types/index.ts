@@ -1,3 +1,27 @@
+export interface KeyValue {
+    key: string;
+    value: string;
+    enabled: boolean;
+}
+
+export type AuthType = 'none' | 'bearer' | 'basic' | 'apikey';
+
+export interface AuthConfig {
+    type: AuthType;
+    bearer?: {
+        token: string;
+    };
+    basic?: {
+        username: string;
+        password: string;
+    };
+    apikey?: {
+        key: string;
+        value: string;
+        addTo: 'header' | 'query';
+    };
+}
+
 export interface ApiRequest {
     id: string;
     name: string;
@@ -7,12 +31,7 @@ export interface ApiRequest {
     queryParams: KeyValue[];
     body: string;
     bodyType: 'json' | 'raw';
-}
-
-export interface KeyValue {
-    key: string;
-    value: string;
-    enabled: boolean;
+    auth: AuthConfig;
 }
 
 export interface Folder {

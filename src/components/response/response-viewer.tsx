@@ -4,6 +4,7 @@ import { JsonViewer } from './json-viewer';
 import { RawViewer } from './raw-viewer';
 import { HeadersViewer } from './headers-viewer';
 import { TableViewer } from './table-viewer';
+import { CookiesViewer } from './cookies-viewer';
 
 interface ApiResponse {
     status: number;
@@ -11,6 +12,7 @@ interface ApiResponse {
     headers: Record<string, string>;
     data: any;
     duration: number;
+    cookies?: string[];
 }
 
 interface ResponseViewerProps {
@@ -26,6 +28,8 @@ export function ResponseViewer({ response }: ResponseViewerProps) {
 
     const isTableCompatible = Array.isArray(response.data) ||
         (typeof response.data === 'object' && response.data !== null);
+
+    const hasCookies = response.cookies && response.cookies.length > 0;
 
     return (
         <div className="border border-border bg-card flex flex-col h-full">
@@ -52,6 +56,9 @@ export function ResponseViewer({ response }: ResponseViewerProps) {
                     <TabsTrigger value="headers" className="rounded-none">
                         Headers
                     </TabsTrigger>
+                    <TabsTrigger value="cookies" className="rounded-none">
+                        Cookies {hasCookies && `(${response.cookies?.length})`}
+                    </TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="pretty" className="m-0 flex-1 overflow-hidden">
@@ -74,6 +81,10 @@ export function ResponseViewer({ response }: ResponseViewerProps) {
 
                 <TabsContent value="headers" className="m-0 flex-1 overflow-hidden">
                     <HeadersViewer headers={response.headers} />
+                </TabsContent>
+
+                <TabsContent value="cookies" className="m-0 flex-1 overflow-hidden">
+                    <CookiesViewer cookies={response.cookies || []} />
                 </TabsContent>
             </Tabs>
         </div>

@@ -20,6 +20,7 @@
     "@radix-ui/react-tabs": "^1.1.13",
     "@radix-ui/react-tooltip": "^1.2.8",
     "@types/react-syntax-highlighter": "^15.5.13",
+    "@types/set-cookie-parser": "^2.4.10",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "lucide-react": "^0.554.0",
@@ -27,6 +28,7 @@
     "react": "19.2.0",
     "react-dom": "19.2.0",
     "react-syntax-highlighter": "^16.1.0",
+    "set-cookie-parser": "^2.7.2",
     "tailwind-merge": "^3.4.0",
     "zustand": "^5.0.8"
   },
