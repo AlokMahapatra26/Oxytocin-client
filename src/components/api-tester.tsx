@@ -3,6 +3,8 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
 import {
     Select,
     SelectContent,
@@ -11,6 +13,12 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+
+interface KeyValue {
+    key: string;
+    value: string;
+    enabled: boolean;
+}
 
 interface ApiResponse {
     status: number;
@@ -27,6 +35,41 @@ export default function ApiTester() {
     const [response, setResponse] = useState<ApiResponse | null>(null);
     const [error, setError] = useState<string | null>(null);
 
+    // Request data
+    const [queryParams, setQueryParams] = useState<KeyValue[]>([
+        { key: '', value: '', enabled: true },
+    ]);
+    const [headers, setHeaders] = useState<KeyValue[]>([
+        { key: '', value: '', enabled: true },
+    ]);
+    const [body, setBody] = useState('');
+    const [bodyType, setBodyType] = useState<'json' | 'raw'>('json');
+
+    const addRow = (
+        type: 'params' | 'headers',
+        setter: React.Dispatch<React.SetStateAction<KeyValue[]>>
+    ) => {
+        setter((prev) => [...prev, { key: '', value: '', enabled: true }]);
+    };
+
+    const updateRow = (
+        index: number,
+        field: keyof KeyValue,
+        value: string | boolean,
+        setter: React.Dispatch<React.SetStateAction<KeyValue[]>>
+    ) => {
+        setter((prev) =>
+            prev.map((item, i) => (i === index ? { ...item, [field]: value } : item))
+        );
+    };
+
+    const removeRow = (
+        index: number,
+        setter: React.Dispatch<React.SetStateAction<KeyValue[]>>
+    ) => {
+        setter((prev) => prev.filter((_, i) => i !== index));
+    };
+
     const handleSendRequest = async () => {
         if (!url) {
             setError('Please enter a URL');
@@ -38,6 +81,34 @@ export default function ApiTester() {
         setResponse(null);
 
         try {
+            // Build params object
+            const params: Record<string, string> = {};
+            queryParams.forEach((param) => {
+                if (param.enabled && param.key) {
+                    params[param.key] = param.value;
+                }
+            });
+
+            // Build headers object
+            const requestHeaders: Record<string, string> = {};
+            headers.forEach((header) => {
+                if (header.enabled && header.key) {
+                    requestHeaders[header.key] = header.value;
+                }
+            });
+
+            // Parse body
+            let requestBody = null;
+            if (['POST', 'PUT', 'PATCH'].includes(method) && body) {
+                try {
+                    requestBody = bodyType === 'json' ? JSON.parse(body) : body;
+                } catch {
+                    setError('Invalid JSON in body');
+                    setLoading(false);
+                    return;
+                }
+            }
+
             const res = await fetch('http://localhost:5000/api/proxy', {
                 method: 'POST',
                 headers: {
@@ -46,6 +117,9 @@ export default function ApiTester() {
                 body: JSON.stringify({
                     url,
                     method,
+                    headers: requestHeaders,
+                    params,
+                    body: requestBody,
                 }),
             });
 
@@ -65,13 +139,13 @@ export default function ApiTester() {
 
     return (
         <div className="min-h-screen bg-background p-8">
-            <div className="max-w-6xl mx-auto">
-                <h1 className="text-3xl font-bold mb-8 text-foreground"></h1>
+            <div className="max-w-7xl mx-auto">
+                <h1 className="text-3xl font-bold mb-8">API Tester</h1>
 
                 {/* Request Section */}
                 <div className="border border-border bg-card mb-6">
                     <div className="p-6">
-                        <div className="flex gap-3">
+                        <div className="flex gap-3 mb-6">
                             <Select value={method} onValueChange={setMethod}>
                                 <SelectTrigger className="w-[120px]">
                                     <SelectValue />
@@ -102,16 +176,175 @@ export default function ApiTester() {
                                 {loading ? 'Sending...' : 'Send'}
                             </Button>
                         </div>
+
+                        {/* Request Tabs */}
+                        <Tabs defaultValue="params" className="w-full">
+                            <TabsList className="bg-muted">
+                                <TabsTrigger value="params">Query Params</TabsTrigger>
+                                <TabsTrigger value="headers">Headers</TabsTrigger>
+                                {['POST', 'PUT', 'PATCH'].includes(method) && (
+                                    <TabsTrigger value="body">Body</TabsTrigger>
+                                )}
+                            </TabsList>
+
+                            {/* Query Params Tab */}
+                            <TabsContent value="params" className="mt-4">
+                                <div className="space-y-2">
+                                    {queryParams.map((param, index) => (
+                                        <div key={index} className="flex gap-2 items-center">
+                                            <input
+                                                type="checkbox"
+                                                checked={param.enabled}
+                                                onChange={(e) =>
+                                                    updateRow(
+                                                        index,
+                                                        'enabled',
+                                                        e.target.checked,
+                                                        setQueryParams
+                                                    )
+                                                }
+                                                className="w-4 h-4"
+                                            />
+                                            <Input
+                                                placeholder="Key"
+                                                value={param.key}
+                                                onChange={(e) =>
+                                                    updateRow(index, 'key', e.target.value, setQueryParams)
+                                                }
+                                                className="flex-1"
+                                            />
+                                            <Input
+                                                placeholder="Value"
+                                                value={param.value}
+                                                onChange={(e) =>
+                                                    updateRow(
+                                                        index,
+                                                        'value',
+                                                        e.target.value,
+                                                        setQueryParams
+                                                    )
+                                                }
+                                                className="flex-1"
+                                            />
+                                            <Button
+                                                variant="destructive"
+                                                size="sm"
+                                                onClick={() => removeRow(index, setQueryParams)}
+                                                disabled={queryParams.length === 1}
+                                            >
+                                                Remove
+                                            </Button>
+                                        </div>
+                                    ))}
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => addRow('params', setQueryParams)}
+                                    >
+                                        Add Param
+                                    </Button>
+                                </div>
+                            </TabsContent>
+
+                            {/* Headers Tab */}
+                            <TabsContent value="headers" className="mt-4">
+                                <div className="space-y-2">
+                                    {headers.map((header, index) => (
+                                        <div key={index} className="flex gap-2 items-center">
+                                            <input
+                                                type="checkbox"
+                                                checked={header.enabled}
+                                                onChange={(e) =>
+                                                    updateRow(
+                                                        index,
+                                                        'enabled',
+                                                        e.target.checked,
+                                                        setHeaders
+                                                    )
+                                                }
+                                                className="w-4 h-4"
+                                            />
+                                            <Input
+                                                placeholder="Key"
+                                                value={header.key}
+                                                onChange={(e) =>
+                                                    updateRow(index, 'key', e.target.value, setHeaders)
+                                                }
+                                                className="flex-1"
+                                            />
+                                            <Input
+                                                placeholder="Value"
+                                                value={header.value}
+                                                onChange={(e) =>
+                                                    updateRow(index, 'value', e.target.value, setHeaders)
+                                                }
+                                                className="flex-1"
+                                            />
+                                            <Button
+                                                variant="destructive"
+                                                size="sm"
+                                                onClick={() => removeRow(index, setHeaders)}
+                                                disabled={headers.length === 1}
+                                            >
+                                                Remove
+                                            </Button>
+                                        </div>
+                                    ))}
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => addRow('headers', setHeaders)}
+                                    >
+                                        Add Header
+                                    </Button>
+                                </div>
+                            </TabsContent>
+
+                            {/* Body Tab */}
+                            {['POST', 'PUT', 'PATCH'].includes(method) && (
+                                <TabsContent value="body" className="mt-4">
+                                    <div className="space-y-4">
+                                        <div className="flex gap-2">
+                                            <Button
+                                                variant={bodyType === 'json' ? 'default' : 'outline'}
+                                                size="sm"
+                                                onClick={() => setBodyType('json')}
+                                            >
+                                                JSON
+                                            </Button>
+                                            <Button
+                                                variant={bodyType === 'raw' ? 'default' : 'outline'}
+                                                size="sm"
+                                                onClick={() => setBodyType('raw')}
+                                            >
+                                                Raw
+                                            </Button>
+                                        </div>
+                                        <Textarea
+                                            placeholder={
+                                                bodyType === 'json'
+                                                    ? '{\n  "key": "value"\n}'
+                                                    : 'Enter raw body content'
+                                            }
+                                            value={body}
+                                            onChange={(e) => setBody(e.target.value)}
+                                            className="font-mono min-h-[200px]"
+                                        />
+                                    </div>
+                                </TabsContent>
+                            )}
+                        </Tabs>
                     </div>
                 </div>
 
-                {/* Response Section */}
+                {/* Error Section */}
                 {error && (
                     <div className="border border-destructive bg-destructive/10 p-4 mb-6">
                         <p className="text-destructive font-medium">Error: {error}</p>
                     </div>
                 )}
 
+                {/* Response Section */}
                 {response && (
                     <div className="border border-border bg-card">
                         <div className="p-4 border-b border-border">
@@ -119,8 +352,8 @@ export default function ApiTester() {
                                 <span className="text-sm text-muted-foreground">Status:</span>
                                 <span
                                     className={`font-semibold ${response.status >= 200 && response.status < 300
-                                        ? 'text-green-600'
-                                        : 'text-red-600'
+                                            ? 'text-green-600'
+                                            : 'text-red-600'
                                         }`}
                                 >
                                     {response.status} {response.statusText}
@@ -132,23 +365,19 @@ export default function ApiTester() {
                         </div>
 
                         <Tabs defaultValue="body" className="w-full">
-                            <TabsList className="w-full justify-start border-b border-border bg-transparent h-12 rounded-none">
-                                <TabsTrigger value="body" className="rounded-none">
-                                    Body
-                                </TabsTrigger>
-                                <TabsTrigger value="headers" className="rounded-none">
-                                    Headers
-                                </TabsTrigger>
+                            <TabsList className="w-full justify-start bg-muted h-12">
+                                <TabsTrigger value="body">Body</TabsTrigger>
+                                <TabsTrigger value="headers">Headers</TabsTrigger>
                             </TabsList>
 
                             <TabsContent value="body" className="p-6">
-                                <pre className="bg-muted p-4 overflow-auto max-h-[500px] text-sm">
+                                <pre className="bg-muted p-4 overflow-auto max-h-[500px] text-sm font-mono">
                                     {JSON.stringify(response.data, null, 2)}
                                 </pre>
                             </TabsContent>
 
                             <TabsContent value="headers" className="p-6">
-                                <pre className="bg-muted p-4 overflow-auto max-h-[500px] text-sm">
+                                <pre className="bg-muted p-4 overflow-auto max-h-[500px] text-sm font-mono">
                                     {JSON.stringify(response.headers, null, 2)}
                                 </pre>
                             </TabsContent>
