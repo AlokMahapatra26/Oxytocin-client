@@ -19,6 +19,7 @@ import { useStore } from '@/hooks/use-store';
 import { ApiRequest, KeyValue, AuthConfig } from '@/types';
 import { ResponseViewer } from '@/components/response/response-viewer';
 import { AuthPanel } from '@/components/auth/auth-panel';
+import { ModeToggle } from '@/components/mode-toggle';
 
 interface ApiResponse {
     status: number;
@@ -233,7 +234,10 @@ export default function ApiTester() {
                     <div className="shrink-0 p-4 border-b border-border bg-background">
                         <div className="flex items-center gap-4">
                             <SidebarTrigger />
-                            <h1 className="text-2xl font-bold">API Tester</h1>
+                            <h1 className="text-2xl font-bold ">Oxytocin</h1>
+                            <div className="ml-auto">
+                                <ModeToggle />
+                            </div>
                         </div>
                     </div>
 

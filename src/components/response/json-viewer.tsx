@@ -36,7 +36,6 @@ export function JsonViewer({ data }: JsonViewerProps) {
                     ) : (
                         <>
                             <Copy className="h-3 w-3 mr-2" />
-                            Copy
                         </>
                     )}
                 </Button>
@@ -48,7 +47,7 @@ export function JsonViewer({ data }: JsonViewerProps) {
                     margin: 0,
                     borderRadius: 0,
                     fontSize: '13px',
-                    backgroundColor: '#fafafa',
+                    backgroundColor: 'transparent',
                     height: '100%',
                     overflow: 'auto',
                 }}
