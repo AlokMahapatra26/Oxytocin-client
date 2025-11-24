@@ -5,6 +5,7 @@ import { RawViewer } from './raw-viewer';
 import { HeadersViewer } from './headers-viewer';
 import { TableViewer } from './table-viewer';
 import { CookiesViewer } from './cookies-viewer';
+import { Code, Cookie, FileText, ListChecks, Table } from 'lucide-react';
 
 interface ApiResponse {
     status: number;
@@ -42,29 +43,25 @@ export function ResponseViewer({ response }: ResponseViewerProps) {
 
             <Tabs defaultValue="pretty" className="w-full flex-1 flex flex-col overflow-hidden">
                 <TabsList className="w-full justify-start border-b border-border bg-transparent h-12 rounded shrink-0 cursor-pointer">
-                    <TabsTrigger value="pretty" className="rounded cursor-pointer">
-                        Pretty
+                    <TabsTrigger value="pretty" className="rounded cursor-pointer flex items-center gap-1">
+                        <Code size={16} /> Pretty
                     </TabsTrigger>
-                    <TabsTrigger value="raw" className="rounded cursor-pointer">
-                        Raw
+                    <TabsTrigger value="raw" className="rounded cursor-pointer flex items-center gap-1">
+                        <FileText size={16} /> Raw
                     </TabsTrigger>
                     {isTableCompatible && (
-                        <TabsTrigger value="table" className="rounded cursor-pointer">
-                            Table
+                        <TabsTrigger value="table" className="rounded cursor-pointer flex items-center gap-1">
+                            <Table size={16} /> Table
                         </TabsTrigger>
                     )}
-                    <TabsTrigger value="headers" className="rounded cursor-pointer">
-                        Headers
+                    <TabsTrigger value="headers" className="rounded cursor-pointer flex items-center gap-1">
+                        <ListChecks size={16} /> Headers
                     </TabsTrigger>
-                    <TabsTrigger value="cookies" className="rounded-none cursor-pointer">
-                        Cookies {hasCookies && `(${response.cookies?.length})`}
+                    <TabsTrigger value="cookies" className="rounded-none cursor-pointer flex items-center gap-1">
+                        <Cookie size={16} /> Cookies {hasCookies && `(${response.cookies?.length})`}
                     </TabsTrigger>
                 </TabsList>
 
-                {/* Using a key on TabsContent to force re-render and apply transitions on mount/unmount */}
-                {/* Note: True "smooth transitions" with Radix UI Tabs often require keeping all content mounted
-                    and animating visibility/opacity, or using external animation libraries.
-                    This approach adds a subtle fade-in. */}
                 <TabsContent value="pretty" className="m-0 flex-1 overflow-hidden data-[state=active]:animate-in data-[state=active]:fade-in-0">
                     {typeof response.data === 'object' ? (
                         <JsonViewer data={response.data} />
