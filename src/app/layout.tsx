@@ -14,8 +14,8 @@ const poppins = Poppins({
 });
 
 export const metadata: Metadata = {
-  title: "API Tester - Modern API Testing Tool",
-  description: "Professional API testing tool built with Next.js",
+  title: "Oxytosin - Modern API Testing Tool",
+  description: "A clean, powerful API testing tool built for developers who appreciate simplicity and elegance.",
 };
 
 export default function RootLayout({
