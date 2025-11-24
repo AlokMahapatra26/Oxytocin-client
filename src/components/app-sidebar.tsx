@@ -1,7 +1,17 @@
 'use client';
 
 import { useState } from 'react';
-import { Folder, FileText, Plus, Trash2, FolderPlus, MoreVertical, Edit, ChevronRight, ChevronDown } from 'lucide-react';
+import {
+    Folder,
+    FileText,
+    Plus,
+    Trash2,
+    FolderPlus,
+    MoreVertical,
+    Edit,
+    ChevronRight,
+    ChevronDown,
+} from 'lucide-react';
 import {
     Sidebar,
     SidebarContent,
@@ -42,7 +52,12 @@ interface AppSidebarProps {
     onDeleteRequest: (collectionId: string, requestId: string, folderId?: string) => void;
     onRenameCollection: (collectionId: string, newName: string) => void;
     onRenameFolder: (collectionId: string, folderId: string, newName: string) => void;
-    onRenameRequest: (collectionId: string, requestId: string, newName: string, folderId?: string) => void;
+    onRenameRequest: (
+        collectionId: string,
+        requestId: string,
+        newName: string,
+        folderId?: string
+    ) => void;
     selectedRequestId: string | null;
 }
 
@@ -146,7 +161,7 @@ export function AppSidebar({
             <SidebarHeader className="border-b border-border p-4">
                 <div className="flex items-center justify-between">
                     <h2 className="font-bold text-lg">Collections</h2>
-                    <Button size="sm" onClick={onAddCollection}>
+                    <Button size="sm" onClick={onAddCollection} className="cursor-pointer">
                         <Plus className="h-4 w-4" />
                     </Button>
                 </div>
@@ -163,13 +178,14 @@ export function AppSidebar({
                         >
                             <SidebarGroup>
                                 <SidebarGroupLabel className="flex items-center justify-between gap-2 group">
-                                    <CollapsibleTrigger className="flex items-center gap-2 flex-1 hover:text-primary transition-colors">
+                                    <CollapsibleTrigger className="flex items-center gap-2 flex-1 hover:text-primary transition-colors cursor-pointer">
                                         {isExpanded ? (
                                             <ChevronDown className="h-4 w-4 shrink-0" />
                                         ) : (
                                             <ChevronRight className="h-4 w-4 shrink-0" />
                                         )}
-                                        {renamingItem?.type === 'collection' && renamingItem.id === collection.id ? (
+                                        {renamingItem?.type === 'collection' &&
+                                            renamingItem.id === collection.id ? (
                                             <Input
                                                 value={renameValue}
                                                 onChange={(e) => setRenameValue(e.target.value)}
@@ -191,7 +207,7 @@ export function AppSidebar({
                                                     'h-6 w-6 rounded-md',
                                                     'opacity-0 group-hover:opacity-100',
                                                     'hover:bg-accent hover:text-accent-foreground',
-                                                    'transition-all'
+                                                    'transition-all cursor-pointer'
                                                 )}
                                                 onClick={(e) => e.stopPropagation()}
                                             >
@@ -200,24 +216,33 @@ export function AppSidebar({
                                         </DropdownMenuTrigger>
                                         <DropdownMenuContent align="end">
                                             <DropdownMenuItem
-                                                onClick={() => startRename('collection', collection.id, collection.name)}
+                                                onClick={() =>
+                                                    startRename('collection', collection.id, collection.name)
+                                                }
+                                                className="cursor-pointer"
                                             >
                                                 <Edit className="h-4 w-4 mr-2" />
                                                 Rename
                                             </DropdownMenuItem>
                                             <DropdownMenuSeparator />
-                                            <DropdownMenuItem onClick={() => onAddFolder(collection.id)}>
+                                            <DropdownMenuItem
+                                                onClick={() => onAddFolder(collection.id)}
+                                                className="cursor-pointer"
+                                            >
                                                 <FolderPlus className="h-4 w-4 mr-2" />
                                                 Add Folder
                                             </DropdownMenuItem>
-                                            <DropdownMenuItem onClick={() => onAddRequest(collection.id)}>
+                                            <DropdownMenuItem
+                                                onClick={() => onAddRequest(collection.id)}
+                                                className="cursor-pointer"
+                                            >
                                                 <Plus className="h-4 w-4 mr-2" />
                                                 Add Request
                                             </DropdownMenuItem>
                                             <DropdownMenuSeparator />
                                             <DropdownMenuItem
                                                 onClick={() => onDeleteCollection(collection.id)}
-                                                className="text-destructive"
+                                                className="text-destructive cursor-pointer"
                                             >
                                                 <Trash2 className="h-4 w-4 mr-2" />
                                                 Delete Collection
@@ -229,69 +254,91 @@ export function AppSidebar({
                                 <CollapsibleContent>
                                     <SidebarGroupContent>
                                         <SidebarMenu>
-                                            {/* Collection-level requests */}
-                                            {collection.requests.map((request) => (
-                                                <SidebarMenuItem key={request.id}>
-                                                    <div className="relative group flex items-center">
-                                                        <SidebarMenuButton
-                                                            onClick={() => onSelectRequest(request)}
-                                                            isActive={selectedRequestId === request.id}
-                                                            className="flex-1"
-                                                        >
-                                                            <HttpMethodBadge method={request.method} className="shrink-0" />
-                                                            {renamingItem?.type === 'request' &&
-                                                                renamingItem.id === request.id &&
-                                                                !renamingItem.folderId ? (
-                                                                <Input
-                                                                    value={renameValue}
-                                                                    onChange={(e) => setRenameValue(e.target.value)}
-                                                                    onKeyDown={handleKeyDown}
-                                                                    onBlur={handleRename}
-                                                                    onClick={(e) => e.stopPropagation()}
-                                                                    autoFocus
-                                                                    className="h-6 text-xs"
-                                                                />
-                                                            ) : (
-                                                                <span className="text-xs truncate">{request.name}</span>
-                                                            )}
-                                                        </SidebarMenuButton>
-                                                        <DropdownMenu>
-                                                            <DropdownMenuTrigger asChild>
-                                                                <button
-                                                                    className={cn(
-                                                                        'inline-flex items-center justify-center shrink-0',
-                                                                        'h-6 w-6 rounded-md mr-2',
-                                                                        'opacity-0 group-hover:opacity-100',
-                                                                        'hover:bg-accent hover:text-accent-foreground',
-                                                                        'transition-all'
+                                            {/* Collection-level requests with hierarchy line */}
+                                            {collection.requests.length > 0 && (
+                                                <div className="ml-4 border-l border-border">
+                                                    {collection.requests.map((request) => (
+                                                        <SidebarMenuItem key={request.id}>
+                                                            <div className="relative group flex items-center pl-4 before:content-[''] before:absolute before:left-0 before:top-1/2 before:w-3 before:border-t before:border-border">
+                                                                <SidebarMenuButton
+                                                                    onClick={() => onSelectRequest(request)}
+                                                                    isActive={selectedRequestId === request.id}
+                                                                    className="flex-1 cursor-pointer"
+                                                                >
+                                                                    <HttpMethodBadge
+                                                                        method={request.method}
+                                                                        className="shrink-0"
+                                                                    />
+                                                                    {renamingItem?.type === 'request' &&
+                                                                        renamingItem.id === request.id &&
+                                                                        !renamingItem.folderId ? (
+                                                                        <Input
+                                                                            value={renameValue}
+                                                                            onChange={(e) =>
+                                                                                setRenameValue(e.target.value)
+                                                                            }
+                                                                            onKeyDown={handleKeyDown}
+                                                                            onBlur={handleRename}
+                                                                            onClick={(e) => e.stopPropagation()}
+                                                                            autoFocus
+                                                                            className="h-6 text-xs"
+                                                                        />
+                                                                    ) : (
+                                                                        <span className="text-xs truncate">
+                                                                            {request.name}
+                                                                        </span>
                                                                     )}
-                                                                    onClick={(e) => e.stopPropagation()}
-                                                                >
-                                                                    <MoreVertical className="h-3 w-3" />
-                                                                </button>
-                                                            </DropdownMenuTrigger>
-                                                            <DropdownMenuContent align="end">
-                                                                <DropdownMenuItem
-                                                                    onClick={() =>
-                                                                        startRename('request', request.id, request.name, collection.id)
-                                                                    }
-                                                                >
-                                                                    <Edit className="h-4 w-4 mr-2" />
-                                                                    Rename
-                                                                </DropdownMenuItem>
-                                                                <DropdownMenuSeparator />
-                                                                <DropdownMenuItem
-                                                                    onClick={() => onDeleteRequest(collection.id, request.id)}
-                                                                    className="text-destructive"
-                                                                >
-                                                                    <Trash2 className="h-4 w-4 mr-2" />
-                                                                    Delete
-                                                                </DropdownMenuItem>
-                                                            </DropdownMenuContent>
-                                                        </DropdownMenu>
-                                                    </div>
-                                                </SidebarMenuItem>
-                                            ))}
+                                                                </SidebarMenuButton>
+                                                                <DropdownMenu>
+                                                                    <DropdownMenuTrigger asChild>
+                                                                        <button
+                                                                            className={cn(
+                                                                                'inline-flex items-center justify-center shrink-0',
+                                                                                'h-6 w-6 rounded-md mr-2',
+                                                                                'opacity-0 group-hover:opacity-100',
+                                                                                'hover:bg-accent hover:text-accent-foreground',
+                                                                                'transition-all cursor-pointer'
+                                                                            )}
+                                                                            onClick={(e) => e.stopPropagation()}
+                                                                        >
+                                                                            <MoreVertical className="h-3 w-3" />
+                                                                        </button>
+                                                                    </DropdownMenuTrigger>
+                                                                    <DropdownMenuContent align="end">
+                                                                        <DropdownMenuItem
+                                                                            onClick={() =>
+                                                                                startRename(
+                                                                                    'request',
+                                                                                    request.id,
+                                                                                    request.name,
+                                                                                    collection.id
+                                                                                )
+                                                                            }
+                                                                            className="cursor-pointer"
+                                                                        >
+                                                                            <Edit className="h-4 w-4 mr-2" />
+                                                                            Rename
+                                                                        </DropdownMenuItem>
+                                                                        <DropdownMenuSeparator />
+                                                                        <DropdownMenuItem
+                                                                            onClick={() =>
+                                                                                onDeleteRequest(
+                                                                                    collection.id,
+                                                                                    request.id
+                                                                                )
+                                                                            }
+                                                                            className="text-destructive cursor-pointer"
+                                                                        >
+                                                                            <Trash2 className="h-4 w-4 mr-2" />
+                                                                            Delete
+                                                                        </DropdownMenuItem>
+                                                                    </DropdownMenuContent>
+                                                                </DropdownMenu>
+                                                            </div>
+                                                        </SidebarMenuItem>
+                                                    ))}
+                                                </div>
+                                            )}
 
                                             {/* Folders */}
                                             {collection.folders.map((folder) => {
@@ -304,7 +351,7 @@ export function AppSidebar({
                                                         >
                                                             <div className="ml-2">
                                                                 <div className="flex items-center justify-between py-2 px-2 gap-2 group">
-                                                                    <CollapsibleTrigger className="flex items-center gap-2 flex-1 hover:text-primary transition-colors">
+                                                                    <CollapsibleTrigger className="flex items-center gap-2 flex-1 hover:text-primary transition-colors cursor-pointer">
                                                                         {isFolderExpanded ? (
                                                                             <ChevronDown className="h-3 w-3 shrink-0" />
                                                                         ) : (
@@ -315,7 +362,9 @@ export function AppSidebar({
                                                                             renamingItem.id === folder.id ? (
                                                                             <Input
                                                                                 value={renameValue}
-                                                                                onChange={(e) => setRenameValue(e.target.value)}
+                                                                                onChange={(e) =>
+                                                                                    setRenameValue(e.target.value)
+                                                                                }
                                                                                 onKeyDown={handleKeyDown}
                                                                                 onBlur={handleRename}
                                                                                 onClick={(e) => e.stopPropagation()}
@@ -336,7 +385,7 @@ export function AppSidebar({
                                                                                     'h-6 w-6 rounded-md',
                                                                                     'opacity-0 group-hover:opacity-100',
                                                                                     'hover:bg-accent hover:text-accent-foreground',
-                                                                                    'transition-all'
+                                                                                    'transition-all cursor-pointer'
                                                                                 )}
                                                                                 onClick={(e) => e.stopPropagation()}
                                                                             >
@@ -346,23 +395,34 @@ export function AppSidebar({
                                                                         <DropdownMenuContent align="end">
                                                                             <DropdownMenuItem
                                                                                 onClick={() =>
-                                                                                    startRename('folder', folder.id, folder.name, collection.id)
+                                                                                    startRename(
+                                                                                        'folder',
+                                                                                        folder.id,
+                                                                                        folder.name,
+                                                                                        collection.id
+                                                                                    )
                                                                                 }
+                                                                                className="cursor-pointer"
                                                                             >
                                                                                 <Edit className="h-4 w-4 mr-2" />
                                                                                 Rename
                                                                             </DropdownMenuItem>
                                                                             <DropdownMenuSeparator />
                                                                             <DropdownMenuItem
-                                                                                onClick={() => onAddRequest(collection.id, folder.id)}
+                                                                                onClick={() =>
+                                                                                    onAddRequest(collection.id, folder.id)
+                                                                                }
+                                                                                className="cursor-pointer"
                                                                             >
                                                                                 <Plus className="h-4 w-4 mr-2" />
                                                                                 Add Request
                                                                             </DropdownMenuItem>
                                                                             <DropdownMenuSeparator />
                                                                             <DropdownMenuItem
-                                                                                onClick={() => onDeleteFolder(collection.id, folder.id)}
-                                                                                className="text-destructive"
+                                                                                onClick={() =>
+                                                                                    onDeleteFolder(collection.id, folder.id)
+                                                                                }
+                                                                                className="text-destructive cursor-pointer"
                                                                             >
                                                                                 <Trash2 className="h-4 w-4 mr-2" />
                                                                                 Delete Folder
@@ -370,78 +430,100 @@ export function AppSidebar({
                                                                         </DropdownMenuContent>
                                                                     </DropdownMenu>
                                                                 </div>
+
+                                                                {/* Folder requests with hierarchy lines */}
                                                                 <CollapsibleContent>
-                                                                    {folder.requests.map((request) => (
-                                                                        <div
-                                                                            key={request.id}
-                                                                            className="relative group ml-4 flex items-center"
-                                                                        >
-                                                                            <SidebarMenuButton
-                                                                                onClick={() => onSelectRequest(request)}
-                                                                                isActive={selectedRequestId === request.id}
-                                                                                className="flex-1"
-                                                                            >
-                                                                                <HttpMethodBadge method={request.method} className="shrink-0" />
-                                                                                {renamingItem?.type === 'request' &&
-                                                                                    renamingItem.id === request.id &&
-                                                                                    renamingItem.folderId === folder.id ? (
-                                                                                    <Input
-                                                                                        value={renameValue}
-                                                                                        onChange={(e) => setRenameValue(e.target.value)}
-                                                                                        onKeyDown={handleKeyDown}
-                                                                                        onBlur={handleRename}
-                                                                                        onClick={(e) => e.stopPropagation()}
-                                                                                        autoFocus
-                                                                                        className="h-6 text-xs"
-                                                                                    />
-                                                                                ) : (
-                                                                                    <span className="text-xs truncate">{request.name}</span>
-                                                                                )}
-                                                                            </SidebarMenuButton>
-                                                                            <DropdownMenu>
-                                                                                <DropdownMenuTrigger asChild>
-                                                                                    <button
-                                                                                        className={cn(
-                                                                                            'inline-flex items-center justify-center shrink-0',
-                                                                                            'h-6 w-6 rounded-md mr-2',
-                                                                                            'opacity-0 group-hover:opacity-100',
-                                                                                            'hover:bg-accent hover:text-accent-foreground',
-                                                                                            'transition-all'
+                                                                    {folder.requests.length > 0 && (
+                                                                        <div className="ml-5 border-l border-border">
+                                                                            {folder.requests.map((request) => (
+                                                                                <div
+                                                                                    key={request.id}
+                                                                                    className="relative group ml-4 flex items-center pl-4 before:content-[''] before:absolute before:left-0 before:top-1/2 before:w-3 before:border-t before:border-border"
+                                                                                >
+                                                                                    <SidebarMenuButton
+                                                                                        onClick={() => onSelectRequest(request)}
+                                                                                        isActive={selectedRequestId === request.id}
+                                                                                        className="flex-1 cursor-pointer"
+                                                                                    >
+                                                                                        <HttpMethodBadge
+                                                                                            method={request.method}
+                                                                                            className="shrink-0"
+                                                                                        />
+                                                                                        {renamingItem?.type === 'request' &&
+                                                                                            renamingItem.id === request.id &&
+                                                                                            renamingItem.folderId === folder.id ? (
+                                                                                            <Input
+                                                                                                value={renameValue}
+                                                                                                onChange={(e) =>
+                                                                                                    setRenameValue(e.target.value)
+                                                                                                }
+                                                                                                onKeyDown={handleKeyDown}
+                                                                                                onBlur={handleRename}
+                                                                                                onClick={(e) =>
+                                                                                                    e.stopPropagation()
+                                                                                                }
+                                                                                                autoFocus
+                                                                                                className="h-6 text-xs"
+                                                                                            />
+                                                                                        ) : (
+                                                                                            <span className="text-xs truncate">
+                                                                                                {request.name}
+                                                                                            </span>
                                                                                         )}
-                                                                                        onClick={(e) => e.stopPropagation()}
-                                                                                    >
-                                                                                        <MoreVertical className="h-3 w-3" />
-                                                                                    </button>
-                                                                                </DropdownMenuTrigger>
-                                                                                <DropdownMenuContent align="end">
-                                                                                    <DropdownMenuItem
-                                                                                        onClick={() =>
-                                                                                            startRename(
-                                                                                                'request',
-                                                                                                request.id,
-                                                                                                request.name,
-                                                                                                collection.id,
-                                                                                                folder.id
-                                                                                            )
-                                                                                        }
-                                                                                    >
-                                                                                        <Edit className="h-4 w-4 mr-2" />
-                                                                                        Rename
-                                                                                    </DropdownMenuItem>
-                                                                                    <DropdownMenuSeparator />
-                                                                                    <DropdownMenuItem
-                                                                                        onClick={() =>
-                                                                                            onDeleteRequest(collection.id, request.id, folder.id)
-                                                                                        }
-                                                                                        className="text-destructive"
-                                                                                    >
-                                                                                        <Trash2 className="h-4 w-4 mr-2" />
-                                                                                        Delete
-                                                                                    </DropdownMenuItem>
-                                                                                </DropdownMenuContent>
-                                                                            </DropdownMenu>
+                                                                                    </SidebarMenuButton>
+                                                                                    <DropdownMenu>
+                                                                                        <DropdownMenuTrigger asChild>
+                                                                                            <button
+                                                                                                className={cn(
+                                                                                                    'inline-flex items-center justify-center shrink-0',
+                                                                                                    'h-6 w-6 rounded-md mr-2',
+                                                                                                    'opacity-0 group-hover:opacity-100',
+                                                                                                    'hover:bg-accent hover:text-accent-foreground',
+                                                                                                    'transition-all cursor-pointer'
+                                                                                                )}
+                                                                                                onClick={(e) =>
+                                                                                                    e.stopPropagation()
+                                                                                                }
+                                                                                            >
+                                                                                                <MoreVertical className="h-3 w-3" />
+                                                                                            </button>
+                                                                                        </DropdownMenuTrigger>
+                                                                                        <DropdownMenuContent align="end">
+                                                                                            <DropdownMenuItem
+                                                                                                onClick={() =>
+                                                                                                    startRename(
+                                                                                                        'request',
+                                                                                                        request.id,
+                                                                                                        request.name,
+                                                                                                        collection.id,
+                                                                                                        folder.id
+                                                                                                    )
+                                                                                                }
+                                                                                                className="cursor-pointer"
+                                                                                            >
+                                                                                                <Edit className="h-4 w-4 mr-2" />
+                                                                                                Rename
+                                                                                            </DropdownMenuItem>
+                                                                                            <DropdownMenuSeparator />
+                                                                                            <DropdownMenuItem
+                                                                                                onClick={() =>
+                                                                                                    onDeleteRequest(
+                                                                                                        collection.id,
+                                                                                                        request.id,
+                                                                                                        folder.id
+                                                                                                    )
+                                                                                                }
+                                                                                                className="text-destructive cursor-pointer"
+                                                                                            >
+                                                                                                <Trash2 className="h-4 w-4 mr-2" />
+                                                                                                Delete
+                                                                                            </DropdownMenuItem>
+                                                                                        </DropdownMenuContent>
+                                                                                    </DropdownMenu>
+                                                                                </div>
+                                                                            ))}
                                                                         </div>
-                                                                    ))}
+                                                                    )}
                                                                 </CollapsibleContent>
                                                             </div>
                                                         </Collapsible>
