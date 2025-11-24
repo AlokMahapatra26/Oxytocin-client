@@ -157,3 +157,12 @@
     opacity: 0;
   }
 }
+
+/* Hide unwanted loaders in Stack Auth pages */
+.auth-handler [role="status"],
+.auth-handler .loader,
+.auth-handler [class*="loader"],
+.auth-handler [class*="spinner"],
+.auth-handler svg[class*="animate-spin"] {
+  display: none !important;
+}

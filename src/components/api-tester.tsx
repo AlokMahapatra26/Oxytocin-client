@@ -1,6 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useUser } from '@stackframe/stack';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -14,13 +16,13 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/app-sidebar';
+import { ModeToggle } from '@/components/mode-toggle';
 import { useApiStore } from '@/store/api-store';
-import { useStore } from '@/hooks/use-store';
+import { setUserHeaders } from '@/lib/api-client';
 import { ApiRequest, KeyValue, AuthConfig } from '@/types';
 import { ResponseViewer } from '@/components/response/response-viewer';
 import { AuthPanel } from '@/components/auth/auth-panel';
-import { ModeToggle } from '@/components/mode-toggle';
-import { Save, Send, Trash2 } from 'lucide-react';
+import { LogOut, User } from 'lucide-react';
 
 interface ApiResponse {
     status: number;
@@ -32,20 +34,27 @@ interface ApiResponse {
 }
 
 export default function ApiTester() {
-    // Use hydration-safe hook
-    const collections = useStore(useApiStore, (state) => state.collections) ?? [];
-    const addCollection = useApiStore((state) => state.addCollection);
-    const addFolder = useApiStore((state) => state.addFolder);
-    const addRequest = useApiStore((state) => state.addRequest);
-    const deleteRequest = useApiStore((state) => state.deleteRequest);
-    const deleteCollection = useApiStore((state) => state.deleteCollection);
-    const deleteFolder = useApiStore((state) => state.deleteFolder);
-    const renameCollection = useApiStore((state) => state.renameCollection);
-    const renameFolder = useApiStore((state) => state.renameFolder);
-    const renameRequest = useApiStore((state) => state.renameRequest);
-    const updateRequest = useApiStore((state) => state.updateRequest);
+    const user = useUser();
+    const router = useRouter();
 
-    const [selectedRequestId, setSelectedRequestId] = useState<string | null>(null);
+    const {
+        collections,
+        isLoading,
+        loadCollections,
+        addCollection,
+        deleteCollection,
+        renameCollection,
+        addFolder,
+        deleteFolder,
+        renameFolder,
+        addRequest,
+        deleteRequest,
+        renameRequest,
+        updateRequest,
+        selectedRequestId,
+        setSelectedRequest,
+    } = useApiStore();
+
     const [url, setUrl] = useState('');
     const [method, setMethod] = useState('GET');
     const [loading, setLoading] = useState(false);
@@ -62,8 +71,18 @@ export default function ApiTester() {
     const [bodyType, setBodyType] = useState<'json' | 'raw'>('json');
     const [auth, setAuth] = useState<AuthConfig>({ type: 'none' });
 
+    // Initialize user and load collections
+    useEffect(() => {
+        if (user === null) {
+            router.push('/handler/sign-in');
+        } else if (user) {
+            setUserHeaders(user.id, user.primaryEmail || '', user.displayName || null);
+            loadCollections();
+        }
+    }, [user, router, loadCollections]);
+
     const selectRequest = (request: ApiRequest) => {
-        setSelectedRequestId(request.id);
+        setSelectedRequest(request.id);
         setUrl(request.url);
         setMethod(request.method);
         setQueryParams(request.queryParams);
@@ -73,7 +92,7 @@ export default function ApiTester() {
         setAuth(request.auth || { type: 'none' });
     };
 
-    const saveCurrentRequest = () => {
+    const saveCurrentRequest = async () => {
         if (!selectedRequestId) return;
 
         let targetCollectionId = '';
@@ -81,15 +100,15 @@ export default function ApiTester() {
         let currentRequest: ApiRequest | undefined;
 
         collections.forEach((col) => {
-            const inCollection = col.requests.find((r) => r.id === selectedRequestId);
+            const inCollection = col.requests.find((r: any) => r.id === selectedRequestId);
             if (inCollection) {
                 targetCollectionId = col.id;
                 currentRequest = inCollection;
                 return;
             }
 
-            col.folders.forEach((folder) => {
-                const inFolder = folder.requests.find((r) => r.id === selectedRequestId);
+            col.folders.forEach((folder: any) => {
+                const inFolder = folder.requests.find((r: any) => r.id === selectedRequestId);
                 if (inFolder) {
                     targetCollectionId = col.id;
                     targetFolderId = folder.id;
@@ -104,7 +123,7 @@ export default function ApiTester() {
                 currentRequest.name === 'New Request' ||
                 currentRequest.name === 'Untitled';
 
-            updateRequest(
+            await updateRequest(
                 targetCollectionId,
                 selectedRequestId,
                 {
@@ -153,7 +172,7 @@ export default function ApiTester() {
             return;
         }
 
-        saveCurrentRequest();
+        await saveCurrentRequest();
         setLoading(true);
         setError(null);
         setResponse(null);
@@ -213,6 +232,19 @@ export default function ApiTester() {
         }
     };
 
+    const handleSignOut = async () => {
+        await user?.signOut();
+        router.push('/handler/sign-in');
+    };
+
+    if (!user || isLoading) {
+        return (
+            <div className="flex items-center justify-center min-h-screen">
+                <div className="text-lg">Loading...</div>
+            </div>
+        );
+    }
+
     return (
         <SidebarProvider>
             <div className="flex h-screen w-full overflow-hidden">
@@ -235,28 +267,36 @@ export default function ApiTester() {
                     <div className="shrink-0 p-4 border-b border-border bg-background">
                         <div className="flex items-center gap-4">
                             <SidebarTrigger />
-                            <h1 className="text-2xl font-bold">Oxytocin</h1>
-                            <div className="ml-auto">
+                            <h1 className="text-2xl font-bold">API Tester</h1>
+                            <div className="ml-auto flex items-center gap-3">
+                                <div className="flex items-center gap-2">
+                                    <User className="h-4 w-4" />
+                                    <span className="text-sm">{user.displayName || user.primaryEmail}</span>
+                                </div>
                                 <ModeToggle />
+                                <Button variant="outline" size="sm" onClick={handleSignOut}>
+                                    <LogOut className="h-4 w-4 mr-2" />
+                                    Sign Out
+                                </Button>
                             </div>
                         </div>
                     </div>
 
-                    <div className="flex-1 overflow-y-auto p-8 ">
+                    <div className="flex-1 overflow-y-auto p-8">
                         <div className="max-w-7xl mx-auto space-y-6">
-                            <div className="border border-border bg-card rounded-lg">
+                            <div className="border border-border bg-card">
                                 <div className="p-6">
                                     <div className="flex gap-3 mb-6">
                                         <Select value={method} onValueChange={setMethod}>
-                                            <SelectTrigger className="w-[120px] cursor-pointer">
+                                            <SelectTrigger className="w-[120px]">
                                                 <SelectValue />
                                             </SelectTrigger>
                                             <SelectContent>
-                                                <SelectItem value="GET" className='cursor-pointer'>GET</SelectItem>
-                                                <SelectItem value="POST" className='cursor-pointer'>POST</SelectItem>
-                                                <SelectItem value="PUT" className='cursor-pointer'>PUT</SelectItem>
-                                                <SelectItem value="DELETE" className='cursor-pointer'>DELETE</SelectItem>
-                                                <SelectItem value="PATCH" className='cursor-pointer'>PATCH</SelectItem>
+                                                <SelectItem value="GET">GET</SelectItem>
+                                                <SelectItem value="POST">POST</SelectItem>
+                                                <SelectItem value="PUT">PUT</SelectItem>
+                                                <SelectItem value="DELETE">DELETE</SelectItem>
+                                                <SelectItem value="PATCH">PATCH</SelectItem>
                                             </SelectContent>
                                         </Select>
 
@@ -269,30 +309,24 @@ export default function ApiTester() {
                                             onKeyPress={(e) => e.key === 'Enter' && handleSendRequest()}
                                         />
 
-                                        <Button onClick={handleSendRequest} disabled={loading} className="px-8 cursor-pointer">
-                                            {loading ? (
-                                                'Sending...'
-                                            ) : (
-                                                <>
-                                                    <Send className="mr-2 h-4 w-4" /> Send
-                                                </>
-                                            )}
+                                        <Button onClick={handleSendRequest} disabled={loading} className="px-8">
+                                            {loading ? 'Sending...' : 'Send'}
                                         </Button>
 
                                         {selectedRequestId && (
-                                            <Button onClick={saveCurrentRequest} variant="outline" className="cursor-pointer">
-                                                <Save className="mr-2 h-4 w-4" /> Save
+                                            <Button onClick={saveCurrentRequest} variant="outline">
+                                                Save
                                             </Button>
                                         )}
                                     </div>
 
                                     <Tabs defaultValue="params" className="w-full">
                                         <TabsList className="bg-muted">
-                                            <TabsTrigger value="params" className='cursor-pointer'>Query Params</TabsTrigger>
-                                            <TabsTrigger value="headers" className='cursor-pointer'>Headers</TabsTrigger>
-                                            <TabsTrigger value="auth" className='cursor-pointer'>Authorization</TabsTrigger>
+                                            <TabsTrigger value="params">Query Params</TabsTrigger>
+                                            <TabsTrigger value="headers">Headers</TabsTrigger>
+                                            <TabsTrigger value="auth">Authorization</TabsTrigger>
                                             {['POST', 'PUT', 'PATCH'].includes(method) && (
-                                                <TabsTrigger value="body" className='cursor-pointer'>Body</TabsTrigger>
+                                                <TabsTrigger value="body">Body</TabsTrigger>
                                             )}
                                         </TabsList>
 
@@ -329,10 +363,8 @@ export default function ApiTester() {
                                                             size="sm"
                                                             onClick={() => removeRow(index, setQueryParams)}
                                                             disabled={queryParams.length === 1}
-                                                            className='cursor-pointer'
                                                         >
-                                                            <Trash2 className="h-4 w-4" />
-
+                                                            Remove
                                                         </Button>
                                                     </div>
                                                 ))}
@@ -340,7 +372,6 @@ export default function ApiTester() {
                                                     variant="outline"
                                                     size="sm"
                                                     onClick={() => addRow('params', setQueryParams)}
-                                                    className='cursor-pointer'
                                                 >
                                                     Add Param
                                                 </Button>
@@ -442,7 +473,7 @@ export default function ApiTester() {
                             )}
 
                             {response && (
-                                <div className="h-[500px] ">
+                                <div className="h-[500px]">
                                     <ResponseViewer response={response} />
                                 </div>
                             )}
@@ -450,6 +481,6 @@ export default function ApiTester() {
                     </div>
                 </div>
             </div>
-        </SidebarProvider >
+        </SidebarProvider>
     );
 }

@@ -1,219 +1,238 @@
 import { create } from 'zustand';
-import { persist, createJSONStorage } from 'zustand/middleware';
 import { Collection, ApiRequest } from '@/types';
+import * as apiClient from '@/lib/api-client';
 
 interface ApiStore {
     collections: Collection[];
-    addCollection: () => void;
-    deleteCollection: (collectionId: string) => void;
-    addFolder: (collectionId: string) => void;
-    deleteFolder: (collectionId: string, folderId: string) => void;
-    addRequest: (collectionId: string, folderId?: string) => void;
-    deleteRequest: (collectionId: string, requestId: string, folderId?: string) => void;
-    renameCollection: (collectionId: string, newName: string) => void;
-    renameFolder: (collectionId: string, folderId: string, newName: string) => void;
-    renameRequest: (collectionId: string, requestId: string, newName: string, folderId?: string) => void;
-    updateRequest: (collectionId: string, requestId: string, updates: Partial<ApiRequest>, folderId?: string) => void;
+    isLoading: boolean;
+    selectedRequestId: string | null;
+
+    // Actions
+    loadCollections: () => Promise<void>;
+    addCollection: () => Promise<void>;
+    deleteCollection: (collectionId: string) => Promise<void>;
+    renameCollection: (collectionId: string, newName: string) => Promise<void>;
+
+    addFolder: (collectionId: string) => Promise<void>;
+    deleteFolder: (collectionId: string, folderId: string) => Promise<void>;
+    renameFolder: (collectionId: string, folderId: string, newName: string) => Promise<void>;
+
+    addRequest: (collectionId: string, folderId?: string) => Promise<void>;
+    deleteRequest: (collectionId: string, requestId: string, folderId?: string) => Promise<void>;
+    renameRequest: (collectionId: string, requestId: string, newName: string, folderId?: string) => Promise<void>;
+    updateRequest: (collectionId: string, requestId: string, updates: Partial<ApiRequest>, folderId?: string) => Promise<void>;
+
+    setSelectedRequest: (requestId: string | null) => void;
 }
 
 const generateId = () => Math.random().toString(36).substr(2, 9);
 
-export const useApiStore = create<ApiStore>()(
-    persist(
-        (set) => ({
-            collections: [],
+export const useApiStore = create<ApiStore>((set, get) => ({
+    collections: [],
+    isLoading: false,
+    selectedRequestId: null,
 
-            addCollection: () =>
-                set((state) => ({
-                    collections: [
-                        ...state.collections,
-                        {
-                            id: generateId(),
-                            name: `Collection ${state.collections.length + 1}`,
-                            folders: [],
-                            requests: [],
-                        },
-                    ],
-                })),
-
-            deleteCollection: (collectionId) =>
-                set((state) => ({
-                    collections: state.collections.filter((col) => col.id !== collectionId),
-                })),
-
-            addFolder: (collectionId) =>
-                set((state) => ({
-                    collections: state.collections.map((col) =>
-                        col.id === collectionId
-                            ? {
-                                ...col,
-                                folders: [
-                                    ...col.folders,
-                                    {
-                                        id: generateId(),
-                                        name: `Folder ${col.folders.length + 1}`,
-                                        requests: [],
-                                    },
-                                ],
-                            }
-                            : col
-                    ),
-                })),
-
-            deleteFolder: (collectionId, folderId) =>
-                set((state) => ({
-                    collections: state.collections.map((col) =>
-                        col.id === collectionId
-                            ? {
-                                ...col,
-                                folders: col.folders.filter((folder) => folder.id !== folderId),
-                            }
-                            : col
-                    ),
-                })),
-
-            addRequest: (collectionId, folderId) =>
-                set((state) => {
-                    const newRequest: ApiRequest = {
-                        id: generateId(),
-                        name: 'New Request',
-                        method: 'GET',
-                        url: '',
-                        headers: [{ key: '', value: '', enabled: true }],
-                        queryParams: [{ key: '', value: '', enabled: true }],
-                        body: '',
-                        bodyType: 'json',
-                        auth: { type: 'none' }, // Add this
-                    };
-
-                    return {
-                        collections: state.collections.map((col) => {
-                            if (col.id === collectionId) {
-                                if (folderId) {
-                                    return {
-                                        ...col,
-                                        folders: col.folders.map((folder) =>
-                                            folder.id === folderId
-                                                ? { ...folder, requests: [...folder.requests, newRequest] }
-                                                : folder
-                                        ),
-                                    };
-                                } else {
-                                    return { ...col, requests: [...col.requests, newRequest] };
-                                }
-                            }
-                            return col;
-                        }),
-                    };
-                }),
-
-            deleteRequest: (collectionId, requestId, folderId) =>
-                set((state) => ({
-                    collections: state.collections.map((col) => {
-                        if (col.id === collectionId) {
-                            if (folderId) {
-                                return {
-                                    ...col,
-                                    folders: col.folders.map((folder) =>
-                                        folder.id === folderId
-                                            ? { ...folder, requests: folder.requests.filter((r) => r.id !== requestId) }
-                                            : folder
-                                    ),
-                                };
-                            } else {
-                                return { ...col, requests: col.requests.filter((r) => r.id !== requestId) };
-                            }
-                        }
-                        return col;
-                    }),
-                })),
-
-            renameCollection: (collectionId, newName) =>
-                set((state) => ({
-                    collections: state.collections.map((col) =>
-                        col.id === collectionId ? { ...col, name: newName } : col
-                    ),
-                })),
-
-            renameFolder: (collectionId, folderId, newName) =>
-                set((state) => ({
-                    collections: state.collections.map((col) =>
-                        col.id === collectionId
-                            ? {
-                                ...col,
-                                folders: col.folders.map((folder) =>
-                                    folder.id === folderId ? { ...folder, name: newName } : folder
-                                ),
-                            }
-                            : col
-                    ),
-                })),
-
-            renameRequest: (collectionId, requestId, newName, folderId) =>
-                set((state) => ({
-                    collections: state.collections.map((col) => {
-                        if (col.id === collectionId) {
-                            if (folderId) {
-                                return {
-                                    ...col,
-                                    folders: col.folders.map((folder) =>
-                                        folder.id === folderId
-                                            ? {
-                                                ...folder,
-                                                requests: folder.requests.map((req) =>
-                                                    req.id === requestId ? { ...req, name: newName } : req
-                                                ),
-                                            }
-                                            : folder
-                                    ),
-                                };
-                            } else {
-                                return {
-                                    ...col,
-                                    requests: col.requests.map((req) =>
-                                        req.id === requestId ? { ...req, name: newName } : req
-                                    ),
-                                };
-                            }
-                        }
-                        return col;
-                    }),
-                })),
-
-            updateRequest: (collectionId, requestId, updates, folderId) =>
-                set((state) => ({
-                    collections: state.collections.map((col) => {
-                        if (col.id === collectionId) {
-                            if (folderId) {
-                                return {
-                                    ...col,
-                                    folders: col.folders.map((folder) =>
-                                        folder.id === folderId
-                                            ? {
-                                                ...folder,
-                                                requests: folder.requests.map((req) =>
-                                                    req.id === requestId ? { ...req, ...updates } : req
-                                                ),
-                                            }
-                                            : folder
-                                    ),
-                                };
-                            } else {
-                                return {
-                                    ...col,
-                                    requests: col.requests.map((req) =>
-                                        req.id === requestId ? { ...req, ...updates } : req
-                                    ),
-                                };
-                            }
-                        }
-                        return col;
-                    }),
-                })),
-        }),
-        {
-            name: 'api-tester-storage',
-            storage: createJSONStorage(() => localStorage),
+    loadCollections: async () => {
+        set({ isLoading: true });
+        try {
+            const data = await apiClient.fetchCollections();
+            set({ collections: data, isLoading: false });
+        } catch (error) {
+            console.error('Error loading collections:', error);
+            set({ isLoading: false });
         }
-    )
-);
+    },
+
+    addCollection: async () => {
+        const collections = get().collections;
+        const name = `Collection ${collections.length + 1}`;
+        const newCollection = await apiClient.createCollection(name);
+        set({ collections: [...collections, newCollection] });
+    },
+
+    deleteCollection: async (collectionId: string) => {
+        await apiClient.deleteCollection(collectionId);
+        set({ collections: get().collections.filter(c => c.id !== collectionId) });
+    },
+
+    renameCollection: async (collectionId: string, newName: string) => {
+        await apiClient.renameCollection(collectionId, newName);
+        set({
+            collections: get().collections.map(c =>
+                c.id === collectionId ? { ...c, name: newName } : c
+            ),
+        });
+    },
+
+    addFolder: async (collectionId: string) => {
+        const collection = get().collections.find(c => c.id === collectionId);
+        const name = `Folder ${(collection?.folders.length || 0) + 1}`;
+        const newFolder = await apiClient.createFolder(collectionId, name);
+
+        set({
+            collections: get().collections.map(c =>
+                c.id === collectionId
+                    ? { ...c, folders: [...c.folders, newFolder] }
+                    : c
+            ),
+        });
+    },
+
+    deleteFolder: async (collectionId: string, folderId: string) => {
+        await apiClient.deleteFolder(folderId);
+        set({
+            collections: get().collections.map(c =>
+                c.id === collectionId
+                    ? { ...c, folders: c.folders.filter(f => f.id !== folderId) }
+                    : c
+            ),
+        });
+    },
+
+    renameFolder: async (collectionId: string, folderId: string, newName: string) => {
+        await apiClient.renameFolder(folderId, newName);
+        set({
+            collections: get().collections.map(c =>
+                c.id === collectionId
+                    ? {
+                        ...c,
+                        folders: c.folders.map(f =>
+                            f.id === folderId ? { ...f, name: newName } : f
+                        ),
+                    }
+                    : c
+            ),
+        });
+    },
+
+    addRequest: async (collectionId: string, folderId?: string) => {
+        const requestData = {
+            name: 'New Request',
+            method: 'GET',
+            url: '',
+            headers: [{ key: '', value: '', enabled: true }],
+            queryParams: [{ key: '', value: '', enabled: true }],
+            body: '',
+            bodyType: 'json',
+            auth: { type: 'none' },
+        };
+
+        const newRequest = await apiClient.createRequest(collectionId, folderId || null, requestData);
+
+        set({
+            collections: get().collections.map(c => {
+                if (c.id === collectionId) {
+                    if (folderId) {
+                        return {
+                            ...c,
+                            folders: c.folders.map(f =>
+                                f.id === folderId
+                                    ? { ...f, requests: [...f.requests, newRequest] }
+                                    : f
+                            ),
+                        };
+                    } else {
+                        return { ...c, requests: [...c.requests, newRequest] };
+                    }
+                }
+                return c;
+            }),
+        });
+    },
+
+    deleteRequest: async (collectionId: string, requestId: string, folderId?: string) => {
+        await apiClient.deleteRequest(requestId);
+
+        set({
+            collections: get().collections.map(c => {
+                if (c.id === collectionId) {
+                    if (folderId) {
+                        return {
+                            ...c,
+                            folders: c.folders.map(f =>
+                                f.id === folderId
+                                    ? { ...f, requests: f.requests.filter(r => r.id !== requestId) }
+                                    : f
+                            ),
+                        };
+                    } else {
+                        return { ...c, requests: c.requests.filter(r => r.id !== requestId) };
+                    }
+                }
+                return c;
+            }),
+        });
+    },
+
+    renameRequest: async (collectionId: string, requestId: string, newName: string, folderId?: string) => {
+        await apiClient.renameRequest(requestId, newName);
+
+        set({
+            collections: get().collections.map(c => {
+                if (c.id === collectionId) {
+                    if (folderId) {
+                        return {
+                            ...c,
+                            folders: c.folders.map(f =>
+                                f.id === folderId
+                                    ? {
+                                        ...f,
+                                        requests: f.requests.map(r =>
+                                            r.id === requestId ? { ...r, name: newName } : r
+                                        ),
+                                    }
+                                    : f
+                            ),
+                        };
+                    } else {
+                        return {
+                            ...c,
+                            requests: c.requests.map(r =>
+                                r.id === requestId ? { ...r, name: newName } : r
+                            ),
+                        };
+                    }
+                }
+                return c;
+            }),
+        });
+    },
+
+    updateRequest: async (collectionId: string, requestId: string, updates: Partial<ApiRequest>, folderId?: string) => {
+        await apiClient.updateRequest(requestId, updates);
+
+        set({
+            collections: get().collections.map(c => {
+                if (c.id === collectionId) {
+                    if (folderId) {
+                        return {
+                            ...c,
+                            folders: c.folders.map(f =>
+                                f.id === folderId
+                                    ? {
+                                        ...f,
+                                        requests: f.requests.map(r =>
+                                            r.id === requestId ? { ...r, ...updates } : r
+                                        ),
+                                    }
+                                    : f
+                            ),
+                        };
+                    } else {
+                        return {
+                            ...c,
+                            requests: c.requests.map(r =>
+                                r.id === requestId ? { ...r, ...updates } : r
+                            ),
+                        };
+                    }
+                }
+                return c;
+            }),
+        });
+    },
+
+    setSelectedRequest: (requestId: string | null) => {
+        set({ selectedRequestId: requestId });
+    },
+}));
