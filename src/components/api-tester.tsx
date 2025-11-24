@@ -20,6 +20,7 @@ import { ApiRequest, KeyValue, AuthConfig } from '@/types';
 import { ResponseViewer } from '@/components/response/response-viewer';
 import { AuthPanel } from '@/components/auth/auth-panel';
 import { ModeToggle } from '@/components/mode-toggle';
+import { Save, Send, Trash2 } from 'lucide-react';
 
 interface ApiResponse {
     status: number;
@@ -241,21 +242,21 @@ export default function ApiTester() {
                         </div>
                     </div>
 
-                    <div className="flex-1 overflow-y-auto p-8">
+                    <div className="flex-1 overflow-y-auto p-8 ">
                         <div className="max-w-7xl mx-auto space-y-6">
-                            <div className="border border-border bg-card">
+                            <div className="border border-border bg-card rounded-lg">
                                 <div className="p-6">
                                     <div className="flex gap-3 mb-6">
                                         <Select value={method} onValueChange={setMethod}>
-                                            <SelectTrigger className="w-[120px]">
+                                            <SelectTrigger className="w-[120px] cursor-pointer">
                                                 <SelectValue />
                                             </SelectTrigger>
                                             <SelectContent>
-                                                <SelectItem value="GET">GET</SelectItem>
-                                                <SelectItem value="POST">POST</SelectItem>
-                                                <SelectItem value="PUT">PUT</SelectItem>
-                                                <SelectItem value="DELETE">DELETE</SelectItem>
-                                                <SelectItem value="PATCH">PATCH</SelectItem>
+                                                <SelectItem value="GET" className='cursor-pointer'>GET</SelectItem>
+                                                <SelectItem value="POST" className='cursor-pointer'>POST</SelectItem>
+                                                <SelectItem value="PUT" className='cursor-pointer'>PUT</SelectItem>
+                                                <SelectItem value="DELETE" className='cursor-pointer'>DELETE</SelectItem>
+                                                <SelectItem value="PATCH" className='cursor-pointer'>PATCH</SelectItem>
                                             </SelectContent>
                                         </Select>
 
@@ -268,24 +269,30 @@ export default function ApiTester() {
                                             onKeyPress={(e) => e.key === 'Enter' && handleSendRequest()}
                                         />
 
-                                        <Button onClick={handleSendRequest} disabled={loading} className="px-8">
-                                            {loading ? 'Sending...' : 'Send'}
+                                        <Button onClick={handleSendRequest} disabled={loading} className="px-8 cursor-pointer">
+                                            {loading ? (
+                                                'Sending...'
+                                            ) : (
+                                                <>
+                                                    <Send className="mr-2 h-4 w-4" /> Send
+                                                </>
+                                            )}
                                         </Button>
 
                                         {selectedRequestId && (
-                                            <Button onClick={saveCurrentRequest} variant="outline">
-                                                Save
+                                            <Button onClick={saveCurrentRequest} variant="outline" className="cursor-pointer">
+                                                <Save className="mr-2 h-4 w-4" /> Save
                                             </Button>
                                         )}
                                     </div>
 
                                     <Tabs defaultValue="params" className="w-full">
                                         <TabsList className="bg-muted">
-                                            <TabsTrigger value="params">Query Params</TabsTrigger>
-                                            <TabsTrigger value="headers">Headers</TabsTrigger>
-                                            <TabsTrigger value="auth">Authorization</TabsTrigger>
+                                            <TabsTrigger value="params" className='cursor-pointer'>Query Params</TabsTrigger>
+                                            <TabsTrigger value="headers" className='cursor-pointer'>Headers</TabsTrigger>
+                                            <TabsTrigger value="auth" className='cursor-pointer'>Authorization</TabsTrigger>
                                             {['POST', 'PUT', 'PATCH'].includes(method) && (
-                                                <TabsTrigger value="body">Body</TabsTrigger>
+                                                <TabsTrigger value="body" className='cursor-pointer'>Body</TabsTrigger>
                                             )}
                                         </TabsList>
 
@@ -322,8 +329,10 @@ export default function ApiTester() {
                                                             size="sm"
                                                             onClick={() => removeRow(index, setQueryParams)}
                                                             disabled={queryParams.length === 1}
+                                                            className='cursor-pointer'
                                                         >
-                                                            Remove
+                                                            <Trash2 className="h-4 w-4" />
+
                                                         </Button>
                                                     </div>
                                                 ))}
@@ -331,6 +340,7 @@ export default function ApiTester() {
                                                     variant="outline"
                                                     size="sm"
                                                     onClick={() => addRow('params', setQueryParams)}
+                                                    className='cursor-pointer'
                                                 >
                                                     Add Param
                                                 </Button>
@@ -432,7 +442,7 @@ export default function ApiTester() {
                             )}
 
                             {response && (
-                                <div className="h-[500px]">
+                                <div className="h-[500px] ">
                                     <ResponseViewer response={response} />
                                 </div>
                             )}
@@ -440,6 +450,6 @@ export default function ApiTester() {
                     </div>
                 </div>
             </div>
-        </SidebarProvider>
+        </SidebarProvider >
     );
 }

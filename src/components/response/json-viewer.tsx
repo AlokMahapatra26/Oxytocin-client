@@ -20,22 +20,22 @@ export function JsonViewer({ data }: JsonViewerProps) {
     };
 
     return (
-        <div className="relative h-full">
-            <div className="absolute top-3 right-3 z-10">
+        <div className="relative h-full ">
+            <div className="absolute top-3 right-3 z-10 ">
                 <Button
                     size="sm"
                     variant="outline"
                     onClick={handleCopy}
-                    className="h-8 bg-background"
+                    className="h-8 bg-background cursor-pointer"
                 >
                     {copied ? (
                         <>
-                            <Check className="h-3 w-3 mr-2" />
-                            Copied
+                            <Check className="h-3 w-3 cursor-pointer" />
+
                         </>
                     ) : (
                         <>
-                            <Copy className="h-3 w-3 mr-2" />
+                            <Copy className="h-3 w-3 cursor-pointer" />
                         </>
                     )}
                 </Button>
@@ -45,7 +45,8 @@ export function JsonViewer({ data }: JsonViewerProps) {
                 style={vs}
                 customStyle={{
                     margin: 0,
-                    borderRadius: 0,
+                    border: 0,
+                    borderRadius: 10,
                     fontSize: '13px',
                     backgroundColor: 'transparent',
                     height: '100%',

@@ -24,17 +24,18 @@ export function RawViewer({ data }: RawViewerProps) {
                     size="sm"
                     variant="outline"
                     onClick={handleCopy}
-                    className="h-8"
+                    className="h-8 cursor-pointer"
+
                 >
                     {copied ? (
                         <>
-                            <Check className="h-3 w-3 mr-2" />
-                            Copied
+                            <Check className="h-3 w-3 " />
+
                         </>
                     ) : (
                         <>
-                            <Copy className="h-3 w-3 mr-2" />
-                            Copy
+                            <Copy className="h-3 w-3 " />
+
                         </>
                     )}
                 </Button>
