@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, Zap, Shield, Layers } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 
 export default function LandingPage() {
     const router = useRouter();
@@ -13,23 +13,19 @@ export default function LandingPage() {
             <div className="container mx-auto px-6 pt-32 pb-24">
                 <div className="max-w-4xl mx-auto text-center space-y-8">
                     {/* Badge */}
-                    <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-accent/10 border border-accent/20 text-sm animate-fade-in">
-                        <Zap className="h-4 w-4 text-accent" />
-                        <span className="font-medium">Modern API Testing</span>
-                    </div>
 
                     {/* Headline */}
                     <h1 className="text-6xl md:text-7xl lg:text-8xl font-bold tracking-tight animate-fade-in-up">
-                        Test APIs
+                        Test your APIs with
                         <br />
                         <span className="bg-gradient-to-r from-accent via-accent to-primary bg-clip-text text-transparent">
-                            Beautifully
+                            Oxytocin
                         </span>
                     </h1>
 
                     {/* Subheadline */}
                     <p className="text-xl md:text-2xl text-muted-foreground max-w-2xl mx-auto leading-relaxed animate-fade-in-up animation-delay-100">
-                        A clean, powerful API testing tool built for developers who appreciate simplicity and elegance.
+                        A clean, powerful API testing tool which is 100% free and always will be.
                     </p>
 
                     {/* CTA Buttons */}
@@ -56,9 +52,7 @@ export default function LandingPage() {
                 {/* Feature Cards */}
                 <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto mt-32">
                     <div className="group p-8 rounded-2xl border border-border bg-card hover:bg-accent/5 transition-all duration-300 hover:border-accent/30">
-                        <div className="h-12 w-12 rounded-xl bg-accent/10 flex items-center justify-center mb-6 group-hover:bg-accent/20 transition-colors">
-                            <Zap className="h-6 w-6 text-accent" />
-                        </div>
+
                         <h3 className="text-xl font-semibold mb-3">Lightning Fast</h3>
                         <p className="text-muted-foreground leading-relaxed">
                             Test your endpoints instantly with our optimized proxy architecture.
@@ -66,9 +60,7 @@ export default function LandingPage() {
                     </div>
 
                     <div className="group p-8 rounded-2xl border border-border bg-card hover:bg-accent/5 transition-all duration-300 hover:border-accent/30">
-                        <div className="h-12 w-12 rounded-xl bg-accent/10 flex items-center justify-center mb-6 group-hover:bg-accent/20 transition-colors">
-                            <Layers className="h-6 w-6 text-accent" />
-                        </div>
+
                         <h3 className="text-xl font-semibold mb-3">Organized</h3>
                         <p className="text-muted-foreground leading-relaxed">
                             Keep your requests structured with collections and folders.
@@ -76,9 +68,7 @@ export default function LandingPage() {
                     </div>
 
                     <div className="group p-8 rounded-2xl border border-border bg-card hover:bg-accent/5 transition-all duration-300 hover:border-accent/30">
-                        <div className="h-12 w-12 rounded-xl bg-accent/10 flex items-center justify-center mb-6 group-hover:bg-accent/20 transition-colors">
-                            <Shield className="h-6 w-6 text-accent" />
-                        </div>
+
                         <h3 className="text-xl font-semibold mb-3">Secure</h3>
                         <p className="text-muted-foreground leading-relaxed">
                             Your data stays private with client-side storage and secure auth.
@@ -91,7 +81,7 @@ export default function LandingPage() {
             <div className="border-t border-border mt-32">
                 <div className="container mx-auto px-6 py-8">
                     <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-muted-foreground">
-                        <p>© 2024 Oxytosin. Crafted with care.</p>
+                        <p>© 2025 Oxytosin. Crafted with care.</p>
                         <div className="flex gap-6">
                             <a href="#" className="hover:text-foreground transition-colors">
                                 Privacy

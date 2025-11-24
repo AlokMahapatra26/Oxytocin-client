@@ -267,7 +267,7 @@ export default function ApiTester() {
                     <div className="shrink-0 p-4 border-b border-border bg-background">
                         <div className="flex items-center gap-4">
                             <SidebarTrigger />
-                            <h1 className="text-2xl font-bold">API Tester</h1>
+                            <h1 className="text-2xl font-bold">Oxytocin</h1>
                             <div className="ml-auto flex items-center gap-3">
                                 <div className="flex items-center gap-2">
                                     <User className="h-4 w-4" />
