@@ -203,7 +203,7 @@ export default function ApiTester() {
                 }
             }
 
-            const res = await fetch('http://localhost:5000/api/proxy', {
+            const res = await fetch('https://oxytocin-client.vercel.app/api/proxy', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
