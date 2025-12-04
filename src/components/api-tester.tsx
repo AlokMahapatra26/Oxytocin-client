@@ -203,7 +203,7 @@ export default function ApiTester() {
                 }
             }
 
-            const res = await fetch('https://oxytocin-client.vercel.app/api/proxy', {
+            const res = await fetch('https://oxytocin-api.onrender.com/api/proxy', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
